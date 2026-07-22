@@ -32,6 +32,7 @@ FASTEMBED_CACHE_DIR = Path(
 )
 STATIC_DIR = BASE_DIR / "static"
 ALLOWED_TYPES = {"application/pdf", "application/x-pdf"}
+PDF_SIGNATURE = b"%PDF-"
 MAX_FILE_MB = int(os.getenv("MAX_FILE_MB", "25"))
 TOP_K = int(os.getenv("RAG_TOP_K", "5"))
 
@@ -280,11 +281,13 @@ async def upload_documents(
     with session_lock(x_user_id, session_id):
         for upload in files:
             name = Path(upload.filename or "document.pdf").name
-            if upload.content_type not in ALLOWED_TYPES and not name.lower().endswith(".pdf"):
+            if upload.content_type not in ALLOWED_TYPES or not name.lower().endswith(".pdf"):
                 raise HTTPException(415, f"{name} is not a PDF")
             content = await upload.read(MAX_FILE_MB * 1024 * 1024 + 1)
             if len(content) > MAX_FILE_MB * 1024 * 1024:
                 raise HTTPException(413, f"{name} exceeds {MAX_FILE_MB} MB")
+            if not content.startswith(PDF_SIGNATURE):
+                raise HTTPException(422, f"{name} does not have a valid PDF signature")
             stored = p["uploads"] / f"{uuid.uuid4().hex}_{name}"
             stored.write_bytes(content)
             try:

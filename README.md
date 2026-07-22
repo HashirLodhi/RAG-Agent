@@ -1,6 +1,6 @@
 # Document RAG
 
-A production-shaped PDF question-answering application with a FastAPI backend, a responsive web interface, persistent vector search, page-level citations, conversation memory, and user-isolated document collections.
+A production-shaped PDF question-answering application with a FastAPI backend, a responsive web interface, persistent vector search, page-level citations, conversation memory, and user-isolated document sessions.
 
 ## Features
 
@@ -31,7 +31,7 @@ flowchart LR
     EVAL -->|citation rate, page recall, token F1| B
 ```
 
-Isolation is enforced server-side: a session is resolved only beneath the validated `X-User-ID` directory. Knowing another user's session ID is not sufficient to access it. For a public deployment, replace the browser-generated ID with an authenticated identity supplied by a trusted proxy or identity provider.
+Isolation is enforced server-side: a session is resolved only beneath the validated `X-User-ID` directory. Knowing another user's session ID is not sufficient to access it. This is storage isolation, not authentication: callers can claim any valid `X-User-ID`. Do not describe this application as a secure multi-tenant SaaS until the header is replaced by a server-verified identity from JWT middleware or an identity provider such as Clerk, Auth0, Firebase Auth, or Supabase Auth.
 
 ## Quick start
 
@@ -127,4 +127,14 @@ python -m pip install pytest httpx
 python -m pytest
 ```
 
-The committed application previously contained an OpenRouter credential. Revoke and rotate that credential before running or publishing this project; deleting it from the current file does not remove it from terminal logs or Git history.
+## Production hardening
+
+Before a public deployment:
+
+- Replace `X-User-ID` with a server-generated user ID from verified JWT claims or a managed identity provider.
+- Store sessions and chat history in PostgreSQL, uploads in object storage, and distributed locks, queues, and caches in Redis.
+- Use a managed vector database or a persistent, deployment-safe Chroma service.
+- Split the application into `api/`, `services/`, `retrieval/`, `storage/`, `evaluation/`, `models/`, and `security/` modules as it grows.
+- For a limited public demo, pre-index sample documents, enforce strict upload and request limits, add API throttling and model-cost controls, and keep source citations visible.
+
+The previously committed OpenRouter credential must be revoked at the provider even after Git history is rewritten. Generate a replacement only after revocation, store it outside Git, and enable GitHub secret scanning before sharing the repository.

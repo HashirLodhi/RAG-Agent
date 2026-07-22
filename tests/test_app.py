@@ -44,3 +44,34 @@ def test_pdf_upload_and_page_metadata(tmp_path, monkeypatch):
     result = response.json()
     assert result["documents"][0]["pages"] > 0
     assert result["total_chunks"] > 0
+
+
+def test_rejects_fake_pdf_content(tmp_path, monkeypatch):
+    monkeypatch.setattr(rag, "DATA_DIR", tmp_path)
+    client = TestClient(rag.app)
+    headers = {"X-User-ID": "upload_test"}
+    session = client.post("/api/sessions", headers=headers, json={}).json()
+
+    response = client.post(
+        f"/api/sessions/{session['id']}/documents",
+        headers=headers,
+        files=[("files", ("fake.pdf", b"this is not a PDF", "application/pdf"))],
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"].endswith("does not have a valid PDF signature")
+
+
+def test_rejects_pdf_with_wrong_media_type(tmp_path, monkeypatch):
+    monkeypatch.setattr(rag, "DATA_DIR", tmp_path)
+    client = TestClient(rag.app)
+    headers = {"X-User-ID": "upload_test"}
+    session = client.post("/api/sessions", headers=headers, json={}).json()
+
+    response = client.post(
+        f"/api/sessions/{session['id']}/documents",
+        headers=headers,
+        files=[("files", ("document.pdf", b"%PDF-1.7", "text/plain"))],
+    )
+
+    assert response.status_code == 415
