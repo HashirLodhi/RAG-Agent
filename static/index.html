@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Document RAG</title><link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main>
+  <header><div><span class="eyebrow">PRIVATE WORKSPACE</span><h1>Ask your documents.</h1><p>Upload PDFs, explore their contents, and verify every answer at the page level.</p></div><button id="new">New conversation</button></header>
+  <section class="panel upload"><label for="files"><strong>Add PDF documents</strong><span>Multiple files supported · 25 MB each</span></label><input id="files" type="file" accept="application/pdf" multiple><button id="upload">Process documents</button><div id="status"></div></section>
+  <section class="panel chat"><div id="messages"><div class="empty"><h2>Your research starts here</h2><p>Upload one or more PDFs, then ask a question about them.</p></div></div><form id="form"><textarea id="question" rows="2" placeholder="Ask a question about your documents…" required></textarea><button type="submit">Ask</button></form></section>
+</main>
+<script src="/static/app.js"></script>
+</body></html>
